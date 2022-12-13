@@ -95,6 +95,15 @@ class MoviesView(Resource):
                 return "", 404
             return movies_schema.dump(movies)
 
+    def post(self):
+        req_json = request.json
+        new_movie = Movie(**req_json)
+        with db.session.begin():
+            db.session.add(new_movie)
+        if not new_movie:
+            return "", 404
+        return "", 201
+
 
 @movie_ns.route("/<int:uid>")
 class MovieView(Resource):
@@ -104,6 +113,63 @@ class MovieView(Resource):
             return "", 404
         return movie_schema.dump(movie_by_id)
 
+    def put(self, uid):
+        movie = Movie.query.get(uid)
+        if not movie:
+            return '', 404
+        req_json = request.json
+        movie.title = req_json.get('title')
+        movie.description = req_json.get('description')
+        movie.trailer = req_json.get('trailer')
+        movie.year = req_json.get('year')
+        movie.rating = req_json.get('rating')
+        movie.genre_id = req_json.get('genre_id')
+        movie.director_id = req_json.get('director_id')
+
+
+    def delete(self, uid):
+        movie = Movie.query.get(uid)
+        if not movie:
+            return "", 404
+        db.session.delete(movie)
+        db.session.commit()
+        return "", 204
+
+
+@director_ns.route('/')
+class DirectorsView(Resource):
+    def get(self):
+        directors = Director.query.all()
+        if not directors:
+            return "", 404
+        return directors_schema.dump(directors)
+
+
+@director_ns.route("/<int:uid>")
+class DirectorView(Resource):
+    def get(self, uid):
+        director_id = Director.query.get(uid)
+        if not director_id:
+            return "", 404
+        return director_schema.dump(director_id)
+
+
+@genre_ns.route('/')
+class GenresView(Resource):
+    def get(self):
+        genres = Genre.query.all()
+        if not genres:
+            return "", 404
+        return genres_schema.dump(genres)
+
+
+@genre_ns.route("/<int:uid>")
+class GenreView(Resource):
+    def get(self, uid):
+        genre_id = Genre.query.get(uid)
+        if not genre_id:
+            return "", 404
+        return genre_schema.dump(genre_id)
 
 
 if __name__ == '__main__':
